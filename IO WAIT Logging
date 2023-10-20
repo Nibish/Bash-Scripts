@@ -1,0 +1,77 @@
+/var/log/iowait.log
+
+
+
+
+
+
+-------------------------------
+#! /bin/bash
+
+
+
+
+# The purpose of this script is to generate a trend analysis of the I/O wait time, and to output the results into a log file which should be executed by a cronjob every 15 minutes.
+
+
+
+
+# Store the hostname in a variable
+HOSTNAME=$(hostname)
+
+
+
+
+# Get the current timestamp and store it in a variable
+TIMESTAMP=$(date +"%Y-%m-%d %T")
+
+
+
+
+# Get the current io wait time and store it in a variable
+IOWAIT=$(iostat -c|awk '/^ /{print $4}')
+
+
+
+
+# Append the data to the log file
+echo "$HOSTNAME,$TIMESTAMP,$IOWAIT" >> /var/log/iowait.log
+
+
+
+
+-----------------------------------------------
+chmod +x iowait /etc/cron.d/iowait.sh
+
+
+
+
+---
+*/15 * * * * /etc/cron.d/iowait.sh
+0 2 * * * root /usr/sbin/logrotate /etc/logrotate.conf
+
+
+
+
+-------------------
+
+
+
+
+0,30 * * * * /etc/init.d/accm checkhealth
+0 0 * * 1 /sbin/aide --check
+0 9 * * * /opt/patches/disk-usage-alert.sh
+0 */4 * * * /opt/McAfee/agent/bin/cmdagent -p
+*/15 * * * * /etc/cron.d/iowait.sh
+0 2 * * * root /usr/sbin/logrotate /etc/logrotate.conf
+
+
+
+
+yum provides iowait
+yum install sysstat-10.1.5-19.el7.x86_64
+
+
+
+
+find /var/cache/logwatch -mtime +15 -exec rm -r {} \;
